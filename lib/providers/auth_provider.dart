@@ -19,23 +19,34 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _initialize() {
-    // Check if Firebase services are initialized
-    _checkAndSetupAuthListener();
+    // Check if Firebase is initialized before setting up listener
+    if (FirebaseService.isInitialized) {
+      _setupAuthListener();
+    } else {
+      print('Firebase not initialized. Auth state listener not set up.');
+    }
   }
 
-  Future<void> _checkAndSetupAuthListener() async {
+  void _setupAuthListener() {
     try {
       // Listen for auth state changes
-      FirebaseService.auth.authStateChanges().listen((User? user) async {
-        if (user != null) {
-          await _fetchUserData();
-        } else {
-          _currentUser = null;
+      FirebaseService.auth.authStateChanges().listen(
+            (User? user) async {
+          if (user != null) {
+            await _fetchUserData();
+          } else {
+            _currentUser = null;
+            notifyListeners();
+          }
+        },
+        onError: (error) {
+          print('Auth state change error: $error');
+          _error = error.toString();
           notifyListeners();
-        }
-      });
+        },
+      );
     } catch (e) {
-      print('Error initializing auth provider: $e');
+      print('Error setting up auth listener: $e');
       _error = e.toString();
       notifyListeners();
     }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:doctor_finder_flutter/models/doctor_model.dart';
 import 'package:doctor_finder_flutter/models/specialty_model.dart';
 import 'package:doctor_finder_flutter/services/firestore_service.dart';
@@ -31,9 +30,16 @@ class DoctorProvider extends ChangeNotifier {
 
   void _initialize() {
     _setLoading(true);
-    _fetchSpecialties();
-    _checkLocationPermission();
-    _subscribeToUpdates();
+
+    // Only fetch data if Firebase is initialized
+    if (FirebaseService.isInitialized) {
+      _fetchSpecialties();
+      _checkLocationPermission();
+      _subscribeToUpdates();
+    } else {
+      print('Firebase not initialized. Cannot fetch doctors.');
+      _setLoading(false);
+    }
   }
 
   void _subscribeToUpdates() {
@@ -62,11 +68,13 @@ class DoctorProvider extends ChangeNotifier {
   }
 
   void _checkAuthState() {
-    final user = FirebaseService.auth.currentUser;
-    if (user == null) {
-      debugPrint('User not authenticated, please sign in');
-    } else {
-      debugPrint('User is authenticated: ${user.email}');
+    if (FirebaseService.isInitialized) {
+      final user = FirebaseService.auth.currentUser;
+      if (user == null) {
+        debugPrint('User not authenticated, please sign in');
+      } else {
+        debugPrint('User is authenticated: ${user.email}');
+      }
     }
   }
 
