@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:doctor_finder_flutter/models/user_model.dart';
 import 'package:doctor_finder_flutter/services/auth_service.dart';
-import 'package:doctor_finder_flutter/services/firebase_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
@@ -19,37 +18,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _initialize() {
-    // Check if Firebase is initialized before setting up listener
-    if (FirebaseService.isInitialized) {
-      _setupAuthListener();
-    } else {
-      print('Firebase not initialized. Auth state listener not set up.');
-    }
-  }
-
-  void _setupAuthListener() {
-    try {
-      // Listen for auth state changes
-      FirebaseService.auth.authStateChanges().listen(
-            (User? user) async {
-          if (user != null) {
-            await _fetchUserData();
-          } else {
-            _currentUser = null;
-            notifyListeners();
-          }
-        },
-        onError: (error) {
-          print('Auth state change error: $error');
-          _error = error.toString();
-          notifyListeners();
-        },
-      );
-    } catch (e) {
-      print('Error setting up auth listener: $e');
-      _error = e.toString();
-      notifyListeners();
-    }
+    // Listen for auth state changes
+    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+      if (user != null) {
+        await _fetchUserData();
+      } else {
+        _currentUser = null;
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> _fetchUserData() async {

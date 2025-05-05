@@ -3,7 +3,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:doctor_finder_flutter/models/doctor_model.dart';
 import 'package:doctor_finder_flutter/models/specialty_model.dart';
 import 'package:doctor_finder_flutter/services/firestore_service.dart';
-import 'package:doctor_finder_flutter/services/firebase_service.dart';
 import 'package:doctor_finder_flutter/services/location_service.dart';
 import 'package:doctor_finder_flutter/core/utils/distance_calculator.dart';
 
@@ -30,52 +29,17 @@ class DoctorProvider extends ChangeNotifier {
 
   void _initialize() {
     _setLoading(true);
-
-    // Only fetch data if Firebase is initialized
-    if (FirebaseService.isInitialized) {
-      _fetchSpecialties();
-      _checkLocationPermission();
-      _subscribeToUpdates();
-    } else {
-      print('Firebase not initialized. Cannot fetch doctors.');
-      _setLoading(false);
-    }
+    _fetchSpecialties();
+    _checkLocationPermission();
+    _subscribeToUpdates();
   }
 
   void _subscribeToUpdates() {
-    try {
-      FirestoreService.getDoctorsStream().listen(
-            (doctors) {
-          _doctors = doctors;
-          _filterDoctors();
-          _setLoading(false);
-        },
-        onError: (error) {
-          debugPrint('Error loading doctors: $error');
-          _setLoading(false);
-
-          // If unauthorized, this might be because user is not authenticated
-          if (error.toString().contains('permissions')) {
-            // Check auth state
-            _checkAuthState();
-          }
-        },
-      );
-    } catch (e) {
-      debugPrint('Error subscribing to doctors: $e');
+    FirestoreService.getDoctorsStream().listen((doctors) {
+      _doctors = doctors;
+      _filterDoctors();
       _setLoading(false);
-    }
-  }
-
-  void _checkAuthState() {
-    if (FirebaseService.isInitialized) {
-      final user = FirebaseService.auth.currentUser;
-      if (user == null) {
-        debugPrint('User not authenticated, please sign in');
-      } else {
-        debugPrint('User is authenticated: ${user.email}');
-      }
-    }
+    });
   }
 
   Future<void> _checkLocationPermission() async {
@@ -91,19 +55,10 @@ class DoctorProvider extends ChangeNotifier {
   }
 
   void _fetchSpecialties() {
-    try {
-      FirestoreService.getSpecialtiesStream().listen(
-            (specialties) {
-          _specialties = specialties;
-          notifyListeners();
-        },
-        onError: (error) {
-          debugPrint('Error loading specialties: $error');
-        },
-      );
-    } catch (e) {
-      debugPrint('Error fetching specialties: $e');
-    }
+    FirestoreService.getSpecialtiesStream().listen((specialties) {
+      _specialties = specialties;
+      notifyListeners();
+    });
   }
 
   void setSearchQuery(String query) {

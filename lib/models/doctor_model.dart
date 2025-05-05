@@ -1,3 +1,6 @@
+// Export GeoPoint for use in mock service
+export 'package:doctor_finder_flutter/models/doctor_model.dart';
+
 class DoctorModel {
   final String id;
   final String name;

@@ -43,19 +43,41 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => DoctorProvider()),
-        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
-        ChangeNotifierProvider(create: (_) => ReviewProvider()),
-      ],
-      child: MaterialApp.router(
-        title: 'Doctor Finder',
-        theme: AppTheme.lightTheme,
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
-      ),
+    // Only create providers after Firebase is initialized
+    return FutureBuilder(
+      future: _waitForFirebase(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(create: (_) => DoctorProvider()),
+            ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+            ChangeNotifierProvider(create: (_) => ReviewProvider()),
+          ],
+          child: MaterialApp.router(
+            title: 'Doctor Finder',
+            theme: AppTheme.lightTheme,
+            routerConfig: appRouter,
+            debugShowCheckedModeBanner: false,
+          ),
+        );
+      },
     );
+  }
+
+  Future<void> _waitForFirebase() async {
+    // Wait a bit for Firebase to be ready
+    await Future.delayed(const Duration(milliseconds: 100));
   }
 }

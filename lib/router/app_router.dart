@@ -43,6 +43,7 @@ final appRouter = GoRouter(
       path: '/auth',
       builder: (context, state) => const AuthScreen(),
     ),
+
     ShellRoute(
       builder: (context, state, child) => MainScaffold(child: child),
       routes: [
